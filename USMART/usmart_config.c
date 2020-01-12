@@ -5,7 +5,8 @@
 #include "delay.h"		
 #include "sys.h"
 #include "servo.h"
-												 
+#include "lm298n.h"
+
 extern void led_set(u8 sta);
 extern void test_fun(void(*ledset)(u8),u8 sta);
 //函数名列表初始化(用户自己添加)
@@ -18,7 +19,8 @@ struct _m_usmart_nametab usmart_nametab[]=
 #endif		   
 	(void*)delay_ms,"void delay_ms(u16 nms)",
  	(void*)delay_us,"void delay_us(u32 nus)",	
-	(void*)servo_control_angle,"void servo_control_angle(int angle, int ch)",   
+	(void*)servo_control_angle,"void servo_control_angle(int angle, int ch)",  
+	(void*)Usmart_LM298N_Speed,"void Usmart_LM298N_Speed(char* speed,uint8_t ch)",
 };						  
 ///////////////////////////////////END///////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
