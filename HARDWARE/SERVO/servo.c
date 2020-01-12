@@ -7,6 +7,7 @@
  */
 void Servo_Init(void)
 {
+    #if 0
     GPIO_InitTypeDef GPIO_InitStructure;
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
     TIM_OCInitTypeDef TIM_OCInitStructure;
@@ -46,11 +47,48 @@ void Servo_Init(void)
     TIM_ARRPreloadConfig(TIM1, ENABLE);               //使能TIMx在ARR上的预装载寄存器
 
 
-
-    //TODO:
     TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
     TIM_CtrlPWMOutputs(TIM1, ENABLE); //高级定时器才有
     TIM_Cmd(TIM1, ENABLE);
+    #endif
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
+    TIM_OCInitTypeDef TIM_OCInitStructure;
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE); //GPIOB
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);  //TIM3
+
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource0, GPIO_AF_TIM3); //PB0
+    GPIO_PinAFConfig(GPIOB, GPIO_PinSource1, GPIO_AF_TIM3); //PB0
+
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+    TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up; //向上
+    TIM_TimeBaseInitStructure.TIM_Period = 20000-1;                      //210-1            //arr 1.25us
+    TIM_TimeBaseInitStructure.TIM_Prescaler = 84-1;                    //psc
+    TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStructure);             //初始化定时器3
+
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;                //PWM模式1 低于CCR为有效极性
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;    //比较使能输出
+    TIM_OCInitStructure.TIM_OutputNState = TIM_OutputNState_Disable; //不用影子寄存器输出互补
+    TIM_OCInitStructure.TIM_OCIdleState = TIM_OCIdleState_Set;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; //有效极性为高
+    TIM_OCInitStructure.TIM_Pulse = SERVO_MIN;
+
+    TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+    TIM_OC4Init(TIM3, &TIM_OCInitStructure);
+
+    TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Enable);
+    TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
+
+    TIM_Cmd(TIM3, ENABLE);
 }
 
 /**
@@ -71,10 +109,12 @@ void servo_control_angle(int angle, int ch)
     switch (ch)
     {
     case 1:
-        TIM_SetCompare1(TIM1, angle);
+        //TIM_SetCompare1(TIM1, angle);
+        TIM_SetCompare3(TIM3, angle);
         break;
     case 2:
-        TIM_SetCompare2(TIM1, angle);
+        //TIM_SetCompare2(TIM1, angle);
+        TIM_SetCompare4(TIM3, angle);
         break;
     }
 }
