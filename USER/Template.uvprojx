@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\USMART;..\HARDWARE\SERVO;..\HARDWARE\LM298N</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\USMART;..\HARDWARE\SERVO;..\HARDWARE\LM298N;..\HARDWARE\ENCODER</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -621,6 +621,11 @@
               <FileName>lm298n.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\LM298N\lm298n.c</FilePath>
+            </File>
+            <File>
+              <FileName>encoder.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\ENCODER\encoder.c</FilePath>
             </File>
           </Files>
         </Group>
