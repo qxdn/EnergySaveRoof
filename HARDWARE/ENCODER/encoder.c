@@ -162,7 +162,7 @@ void Encoder_TIM5_Init(void)
 	//抢占优先级1
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
 	//相应优先级3
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	//配置中断
 	NVIC_Init(&NVIC_InitStructure);

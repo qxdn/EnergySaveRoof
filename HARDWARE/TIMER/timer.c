@@ -1,8 +1,14 @@
 #include "timer.h"
 #include "encoder.h"
 #include "led.h"
+#include "pid.h"
+#include "btn7971.h"
+#include "oled.h"
 
 DUTY System_Duty;
+
+extern PID Motor1PID;
+extern PID Motor2PID;
 
 /**
  * @description: TIM7初始化 1ms
@@ -23,14 +29,14 @@ void TIM7_Init(u16 arr, u16 psc)
 
     TIM_TimeBaseInit(TIM7, &TIM_TimeBaseStrucrure);
 
-    TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
-    TIM_Cmd(TIM7, ENABLE); //使能TIM7外设
-
     NVIC_InitStructure.NVIC_IRQChannel = TIM7_IRQn; //定时器7
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
+
+    TIM_ITConfig(TIM7, TIM_IT_Update, ENABLE);
+    TIM_Cmd(TIM7, ENABLE); //使能TIM7外设
 }
 
 /**
@@ -135,11 +141,14 @@ void duty_40ms(void)
 {
     Read_Encoder(&Encoder_1);
     Read_Encoder(&Encoder_2);
+    LOC_PIDCaculate(&Motor1PID, Encoder_1.angle);
+    LOC_PIDCaculate(&Motor2PID, Encoder_2.angle);
+    contrl_speed(Motor1PID.Pwmduty, 1);
+    contrl_speed(Motor2PID.Pwmduty, 2);
 }
 
 void duty_50ms(void)
 {
-
 }
 
 void duty_100ms(void)
@@ -147,12 +156,16 @@ void duty_100ms(void)
 }
 void duty_200ms(void)
 {
-   
+    OLED_ShowString(0, 0, "angle1:", 12);
+    OLED_ShowString(0, 12, "angle2:", 12);
+    OLED_ShowFloat(55, 0, Encoder_1.angle);
+    OLED_ShowFloat(55, 12, Encoder_2.angle);
+    OLED_Refresh_Gram();
 }
 
 void duty_999ms(void)
 {
-	LED=!LED;
+    LED = !LED;
 }
 
 /**
@@ -203,3 +216,24 @@ void duty_loop(void)
         System_Duty.dutyflag_999ms = false;
     }
 }
+
+
+void ChangleMotorAngle(double angle,uint8_t ch){
+    switch (ch)
+    {
+    case 1:
+        Motor1PID.SetPoint=angle;
+        break;
+    case 2:
+        Motor2PID.SetPoint=angle;
+        break;
+    default:
+        break;
+    }
+}
+
+/***********USMART***********/
+void UsmartChangeMotorAngle(char* angle,uint8_t ch){
+	ChangleMotorAngle(atof(angle),ch);
+}
+

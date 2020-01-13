@@ -23,4 +23,10 @@ void TIM9_Init(u16 arr, u16 psc);
 void TIM10_Init(u16 arr, u16 psc);
 void duty_loop(void);
 
+void ChangleMotorAngle(double angle,uint8_t ch);
+
+
+/*************USMART*************/
+void UsmartChangeMotorAngle(char* angle,uint8_t ch);
+
 #endif

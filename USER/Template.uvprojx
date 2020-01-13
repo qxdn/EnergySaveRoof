@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\USMART;..\HARDWARE\SERVO;..\HARDWARE\LM298N;..\HARDWARE\ENCODER;..\HARDWARE\BTN7971;..\HARDWARE\TIMER;..\HARDWARE\LED;..\HARDWARE\PID</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\FWLIB\inc;..\USMART;..\HARDWARE\SERVO;..\HARDWARE\LM298N;..\HARDWARE\ENCODER;..\HARDWARE\BTN7971;..\HARDWARE\TIMER;..\HARDWARE\LED;..\HARDWARE\PID;..\HARDWARE\OLED</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -641,6 +641,11 @@
               <FileName>pid.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\PID\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\OLED\oled.c</FilePath>
             </File>
           </Files>
         </Group>

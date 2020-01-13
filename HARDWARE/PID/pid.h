@@ -13,6 +13,7 @@ typedef struct PID
     double PrevError;  // 当前误差
     double SumError;   // 总误差,用来做积分
 
+
     double Pwmduty;
 } PID;
 

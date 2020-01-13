@@ -6,7 +6,7 @@
  * @param {type} 
  * @return: 
  */
-void LOC_PIDCaculate(PID* pid, double measure)
+void LOC_PIDCaculate(PID *pid, double measure)
 {
 
     pid->PrevError = pid->SetPoint - measure;
@@ -33,5 +33,5 @@ void LOC_PIDCaculate(PID* pid, double measure)
     //计算输出
     pid->Pwmduty = (pid->Proportion * pid->PrevError) + (pid->SumError * pid->Integral) + (pid->Derivative * (pid->PrevError - pid->LastError));
     pid->LastError = pid->PrevError;
-}
 
+}
