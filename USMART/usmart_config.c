@@ -5,6 +5,7 @@
 #include "delay.h"		
 #include "sys.h"
 #include "servo.h"
+#include "btn7971.h"
 
 extern void led_set(u8 sta);
 extern void test_fun(void(*ledset)(u8),u8 sta);
@@ -19,6 +20,7 @@ struct _m_usmart_nametab usmart_nametab[]=
 	(void*)delay_ms,"void delay_ms(u16 nms)",
  	(void*)delay_us,"void delay_us(u32 nus)",	
 	(void*)servo_control_angle,"void servo_control_angle(int angle, int ch)",  
+	(void*)Usmart_7971speed,"void Usmart_7971speed(char* speed,uint8_t ch)",
 };						  
 ///////////////////////////////////END///////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

@@ -72,4 +72,5 @@
 //void BTN7971_EN2_PWM_Init(void);      //初始化EN2的两个输入				默认输出0
 void BTN7971_Init(int ch);            //只是上面3个函数的包含
 void contrl_speed(int speed, int ch); //speed为速度输入,  ch通道选择，1位EN1，2为EN2
+void Usmart_7971speed(char* speed,uint8_t ch);
 #endif

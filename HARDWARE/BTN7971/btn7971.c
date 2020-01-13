@@ -1,5 +1,6 @@
 #include "btn7971.h"
 #include "usart.h"
+#include "stdlib.h"
 
 #if 0 //不用了
 //channel 选择通道
@@ -248,3 +249,13 @@ void contrl_speed(int speed, int ch)
 		}
 	}
 }
+
+
+
+
+
+/************USMART测试****************/
+void Usmart_7971speed(char* speed,uint8_t ch){
+	contrl_speed(atof(speed),ch);
+}
+
