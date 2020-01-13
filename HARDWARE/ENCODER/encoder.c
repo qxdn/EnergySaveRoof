@@ -7,178 +7,178 @@
  */
 
 /*
- *��������ȡ
+ *编码器读取
  *	Read_Encoder(&encoder_1);
- * 	ʹ��ǰ����encoder.h�е�һȦֵ
+ * 	使用前更改encoder.h中的一圈值
  */
 
 #include "encoder.h"
 
-My_Encoder Encoder_1; //������1
-My_Encoder Encoder_2; //������2
+My_Encoder Encoder_1; //编码器1
+My_Encoder Encoder_2; //编码器2
 
 /**
- * @description: ��ʼ��������
- * 				 ����ʹ�ö�ʱ���ı������ӿ�
- * 				 ʹ��ʱ�ǵø��жϵ����ȼ�
+ * @description: 初始化编码器
+ * 				 尝试使用定时器的编码器接口
+ * 				 使用时记得改中断的优先级
  * @param {type} void
  * @return: void
  */
 void Encoder_TIM4_Init(void)
 {
-    //ѡTIM4�о��鷳Сһ��
-    //��TIM4��ת�ɱ������ӿ�
-    //1,2,3,4,5,8���б������ӿ�
-    //ʱ���ṹ��
+    //选TIM4感觉麻烦小一点
+    //将TIM4包转成编码器接口
+    //1,2,3,4,5,8才有编码器接口
+    //时基结构体
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
-    //GPIO�ṹ��
+    //GPIO结构体
     GPIO_InitTypeDef GPIO_InitStructure;
-    //�жϽṹ��
+    //中断结构体
     //	NVIC_InitTypeDef NVIC_InitStructure;
-    //��ʱ������ṹ��
+    //定时器输入结构体
     TIM_ICInitTypeDef TIM_ICInitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
 
-    //����TIM4ʱ��
+    //开启TIM4时钟
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
     //GPIOD
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-    //D12,D13�˿ڸ���
+    //D12,D13端口复用
     //D12 A
     //D13 B
     GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_TIM4);
     GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_TIM4);
-    //��Ҫ��©
+    //主要开漏
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(GPIOD, &GPIO_InitStructure);
-    //��װ��ֵ
-    //��Ҫ�����ԣ��Ͼ�ֱ��65535����NMDWSM
+    //重装载值
+    //不要都可以，毕竟直接65535走起，NMDWSM
     TIM_TimeBaseInitStructure.TIM_Period = 0XFFFF; //65535
-        //Ԥ��Ƶϵ��
+        //预分频系数
     TIM_TimeBaseInitStructure.TIM_Prescaler = 0; //
-    //���ϼ���
+    //向上计数
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    //ʱ�ӷָ�
+    //时钟分割
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    //��ʼ��ʱ��
+    //初始化时基
     TIM_TimeBaseInit(TIM4, &TIM_TimeBaseInitStructure);
 
-    //TIM4,˫������������ģʽ�ӿ�
+    //TIM4,双计数，编码器模式接口
     TIM_EncoderInterfaceConfig(TIM4, TIM_EncoderMode_TI12, TIM_ICPolarity_BothEdge, TIM_ICPolarity_BothEdge);
-    //���ö�ʱ������ṹ��ȱʡ����
-    //�Ӻ����ڲ�����ͨ��1
-    //��ʵ��ֻ��ͨ��1��ͨ��2�ſ���
+    //配置定时器输入结构体缺省部分
+    //从函数内部看是通道1
+    //事实上只有通道1和通道2才可以
     TIM_ICStructInit(&TIM_ICInitStructure);
-    //�˲�ֵ,��ʱ��������ô�
+    //滤波值,暂时还不清楚用处
     TIM_ICInitStructure.TIM_ICFilter = 10;
     TIM_ICInit(TIM4, &TIM_ICInitStructure);
-    //�����־λ
+    //清除标志位
     // TIM_ClearFlag(TIM4, TIM_FLAG_Update);
-    // //�����жϸ���
+    // //允许中断更新
     // TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-    //��ռ���ֵ
+    //清空计数值
     TIM4->CNT = 0x7FFF; //0;
 #if 1
-	//�����ж�
+	//配置中断
 	NVIC_InitStructure.NVIC_IRQChannel = TIM4_IRQn;
-	//��ռ���ȼ�1
+	//抢占优先级1
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-	//��Ӧ���ȼ�3
+	//相应优先级3
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	//�����ж�
+	//配置中断
 	NVIC_Init(&NVIC_InitStructure);
 #endif
-    Encoder_1.TIM = TIM4;                      //Encoder1ΪTIM4
-    Encoder_1.MAX_PULSE = ENCODER_1_MAX_PULSE; //�������
-    //������ʱ��
+    Encoder_1.TIM = TIM4;                      //Encoder1为TIM4
+    Encoder_1.MAX_PULSE = ENCODER_1_MAX_PULSE; //最大脉冲
+    //开启定时器
     TIM_Cmd(TIM4, ENABLE);
 }
 
 /**
- * @description:TIM5������ 
+ * @description:TIM5编码器 
  * @param {type} void
  * @return: void
  */
 void Encoder_TIM5_Init(void)
 {
-    //ʱ���ṹ��
+    //时基结构体
     TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStructure;
-    //GPIO�ṹ��
+    //GPIO结构体
     GPIO_InitTypeDef GPIO_InitStructure;
-    //�жϽṹ��
+    //中断结构体
     //	NVIC_InitTypeDef NVIC_InitStructure;
-    //��ʱ������ṹ��
+    //定时器输入结构体
     TIM_ICInitTypeDef TIM_ICInitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
-    //����TIM5ʱ��
+    //开启TIM5时钟
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
     //GPIOA
     RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-    //A0 A1�˿ڸ���
+    //A0 A1端口复用
     GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_TIM5); //PA0
     GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_TIM5); //PA1
-    //��Ҫ��©
+    //主要开漏
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
     GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
     GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
-    //��װ��ֵ
-    //��Ҫ�����ԣ��Ͼ�ֱ��65535����NMDWSM
+    //重装载值
+    //不要都可以，毕竟直接65535走起，NMDWSM
     TIM_TimeBaseInitStructure.TIM_Period = 0XFFFF; //65535
-        //Ԥ��Ƶϵ��
+        //预分频系数
     TIM_TimeBaseInitStructure.TIM_Prescaler = 0; //
-    //���ϼ���
+    //向上计数
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    //ʱ�ӷָ�
+    //时钟分割
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    //��ʼ��ʱ��
+    //初始化时基
     TIM_TimeBaseInit(TIM5, &TIM_TimeBaseInitStructure);
 
-    //TIM4,˫������������ģʽ�ӿ�
+    //TIM4,双计数，编码器模式接口
     TIM_EncoderInterfaceConfig(TIM5, TIM_EncoderMode_TI12, TIM_ICPolarity_BothEdge, TIM_ICPolarity_BothEdge);
-    //���ö�ʱ������ṹ��ȱʡ����
-    //�Ӻ����ڲ�����ͨ��1
-    //��ʵ��ֻ��ͨ��1��ͨ��2�ſ���
+    //配置定时器输入结构体缺省部分
+    //从函数内部看是通道1
+    //事实上只有通道1和通道2才可以
     TIM_ICStructInit(&TIM_ICInitStructure);
-    //�˲�ֵ,��ʱ��������ô�
+    //滤波值,暂时还不清楚用处
     TIM_ICInitStructure.TIM_ICFilter = 10;
     TIM_ICInit(TIM5, &TIM_ICInitStructure);
-    //�����־λ
+    //清除标志位
     // TIM_ClearFlag(TIM4, TIM_FLAG_Update);
-    // //�����жϸ���
+    // //允许中断更新
     // TIM_ITConfig(TIM4, TIM_IT_Update, ENABLE);
-    //��ռ���ֵ
+    //清空计数值
     TIM5->CNT = 0x7FFF; //0;
 #if 1
-	//�����ж�
+	//配置中断
 	NVIC_InitStructure.NVIC_IRQChannel = TIM5_IRQn;
-	//��ռ���ȼ�1
+	//抢占优先级1
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
-	//��Ӧ���ȼ�3
+	//相应优先级3
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x03;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	//�����ж�
+	//配置中断
 	NVIC_Init(&NVIC_InitStructure);
 #endif
-    Encoder_2.TIM = TIM5;                      //Encoder1ΪTIM4
-    Encoder_2.MAX_PULSE = ENCODER_2_MAX_PULSE; //�������
-    //������ʱ��
+    Encoder_2.TIM = TIM5;                      //Encoder1为TIM4
+    Encoder_2.MAX_PULSE = ENCODER_2_MAX_PULSE; //最大脉冲
+    //开启定时器
     TIM_Cmd(TIM5, ENABLE);
 }
 
 /**
- * @description: ��������ʼ��
- * @param {type} u8 choice ѡ�� 
- * 				1 ������1
- * 				2 ������2
- * 				0 ȫ��
+ * @description: 编码器初始化
+ * @param {type} u8 choice 选择 
+ * 				1 编码器1
+ * 				2 编码器2
+ * 				0 全部
  * @return: 
  */
 void Encoder_Init(u8 choice)
@@ -200,32 +200,32 @@ void Encoder_Init(u8 choice)
     }
 }
 
-//ת�Ƶ������������Ϊ��Ҫ����
+//转移到步进电机，因为需要两个
 // void TIM4_IRQHandler(void)
 // {
 // 	if (TIM_GetITStatus(TIM4, TIM_IT_Update) == SET)
 // 	{
-// 		//�ж����
-// 		//һ����˵û�м������͵���arr��ֵ��������,�˴���Ҫ��Ȧ��
+// 		//中断溢出
+// 		//一般来说没有计数满就到了arr的值会产生溢出,此处需要计圈数
 // 	}
 // 	TIM_ClearITPendingBit(TIM4, TIM_IT_Update);
 // }
-//��������ֵ
-//���Ƕ�
-//ʹ��ʱ ��ȡ���ھ�����Ҫ����һ��
+//读编码器值
+//读角度
+//使用时 读取周期尽量不要超过一周
 /**
- * @description: ��encoder
- * @param {type} �洢�������Ľṹ��
- * @return: �Ƕ�
+ * @description: 读encoder
+ * @param {type} 存储编码器的结构体
+ * @return: 角度
  */
 double Read_Encoder(My_Encoder *e)
 {
-    //FIXME:�¸�û��
+    //FIXME:新改没测
     int temp;
     int temp_circle = 0;
-    temp = (e->TIM)->CNT - 0x7fff; //�����µ�ֵ
-    e->speed = temp;               //�ٶȸ�ֵ
-    if (temp > e->MAX_PULSE)       //һȦ
+    temp = (e->TIM)->CNT - 0x7fff; //计算新的值
+    e->speed = temp;               //速度赋值
+    if (temp > e->MAX_PULSE)       //一圈
     {
         ++temp_circle;
         temp -= (e->MAX_PULSE);
@@ -235,14 +235,14 @@ double Read_Encoder(My_Encoder *e)
         --temp_circle;
         temp += (e->MAX_PULSE);
     }
-    e->angle = e->angle + 1.0 * temp_circle * 360 + 1.0 * temp / (e->MAX_PULSE) * 360; //����Ƕ�
+    e->angle = e->angle + 1.0 * temp_circle * 360 + 1.0 * temp / (e->MAX_PULSE) * 360; //计算角度
     e->circle = (int)(e->angle / 360);
     (e->TIM)->CNT = 0x7fff;
     return e->angle;
 }
 
 /**
- * @description: ����
+ * @description: 归零
  * @param {type} 
  * @return: 
  */
@@ -254,12 +254,12 @@ void Encoder_Clear(My_Encoder *e)
     (e->TIM)->CNT = 0x7fff;
 }
 /*********************
- * ���º��������µ�������ֵ 
- * ʵ�ʹ����в���
+ * 以下函数用于新电机测编码值 
+ * 实际工程中不用
  ************************/
 
 /**
- * @description:��ʼ������ 
+ * @description:初始化测量 
  * @param {type} 
  * @return: 
  */
