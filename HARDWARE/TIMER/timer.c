@@ -217,15 +217,15 @@ void duty_loop(void)
     }
 }
 
-
-void ChangleMotorAngle(double angle,uint8_t ch){
+void ChangleMotorAngle(double angle, uint8_t ch)
+{
     switch (ch)
     {
     case 1:
-        Motor1PID.SetPoint=angle;
+        Motor1PID.SetPoint = angle;
         break;
     case 2:
-        Motor2PID.SetPoint=angle;
+        Motor2PID.SetPoint = angle;
         break;
     default:
         break;
@@ -233,7 +233,20 @@ void ChangleMotorAngle(double angle,uint8_t ch){
 }
 
 /***********USMART***********/
-void UsmartChangeMotorAngle(char* angle,uint8_t ch){
-	ChangleMotorAngle(atof(angle),ch);
+void UsmartChangeMotorAngle(char *angle, uint8_t ch)
+{
+    ChangleMotorAngle(atof(angle), ch);
 }
 
+void UsmartAutoIncreaseMotor1(char* angle)
+{
+    Motor1PID.SetPoint += atof(angle);
+    if (Motor1PID.SetPoint > 180)
+    {
+        Motor1PID.SetPoint = 180;
+    }
+    else if (Motor1PID.SetPoint < 0)
+    {
+        Motor1PID.SetPoint = 0;
+    }
+}

@@ -28,5 +28,6 @@ void ChangleMotorAngle(double angle,uint8_t ch);
 
 /*************USMART*************/
 void UsmartChangeMotorAngle(char* angle,uint8_t ch);
+void UsmartAutoIncreaseMotor1(char* angle);
 
 #endif
