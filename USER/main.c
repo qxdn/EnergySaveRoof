@@ -14,13 +14,13 @@ PID Motor1PID;
 PID Motor2PID;
 
 void Pid_Init(void){
-	Motor1PID.Proportion=40;
-	Motor1PID.Integral=1;
-	Motor1PID.Derivative=25;
+	Motor1PID.Proportion=300;
+	Motor1PID.Integral=10;
+	Motor1PID.Derivative=200;
 
-	Motor2PID.Proportion=-40;
-	Motor2PID.Integral=-1;
-	Motor2PID.Derivative=-25;
+	Motor2PID.Proportion=-300;
+	Motor2PID.Integral=-10;
+	Motor2PID.Derivative=-200;
 }
 
 
