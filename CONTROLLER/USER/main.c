@@ -30,14 +30,15 @@ int main(void)
 	delay_init(168);
 	uart_init(115200);
 	usmart_dev.init(84);
-	LED_Init();
-	OLED_Init();
-	Encoder_Init(0);
-	BTN7971_Init(3);
-	Pid_Init();
-	TIM7_Init(1000 - 1, 84 - 1);
+	//LED_Init();
+	//OLED_Init();
+	//Encoder_Init(0);
+	//BTN7971_Init(3);
+	//Pid_Init();
+	//TIM7_Init(1000 - 1, 84 - 1);
+	Servo_Init();
 	while (1)
 	{
-		duty_loop();
+		//duty_loop();
 	}
 }
