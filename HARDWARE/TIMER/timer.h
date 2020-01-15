@@ -1,8 +1,10 @@
 #ifndef _TIMER_H_
 #define _TIMER_H_
-#include "stdbool.h"
+//#include "stdbool.h"
 #include "sys.h"
 
+
+			
 typedef struct
 {
     u16 ms;
