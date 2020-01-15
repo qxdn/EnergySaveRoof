@@ -1,6 +1,1 @@
-/obj/*.*
-!/obj/*.hex
-!/obj/*.axf
-
 /.vscode
-/USER/Template.uvguix.*
