@@ -9,4 +9,8 @@
 void Servo_Init(void);
 void servo_control_angle(int angle, int ch);
 
+
+/**********USMART************/
+void Servo_Angle_Usmart(char *angle, int ch);
+
 #endif

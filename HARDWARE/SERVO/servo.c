@@ -1,5 +1,6 @@
 #include "servo.h"
 #include "sys.h"
+#include "stdlib.h"
 /**
  * @description: 初始化舵机
  * @param {type} void 
@@ -117,4 +118,18 @@ void servo_control_angle(int angle, int ch)
         TIM_SetCompare4(TIM3, angle);
         break;
     }
+}
+
+
+void Servo_Angle(double angle,int ch){
+    //角度映射pwm
+    double k=11.11;
+    double b=300.1;
+    servo_control_angle(k*angle+b,ch);
+}
+
+
+/***********USMART*************/
+void Servo_Angle_Usmart(char* angle,int ch){
+    Servo_Angle(atof(angle),ch);
 }

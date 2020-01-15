@@ -32,6 +32,8 @@ struct _m_usmart_nametab usmart_nametab[] =
 		"void UsmartChangeMotorAngle(char* angle,uint8_t ch)",
 		(void *)UsmartAutoIncreaseMotor,
 		"void UsmartAutoIncreaseMotor1(char* angle)",
+		 (void *)Servo_Angle_Usmart,
+		"void Servo_Angle_Usmart(char* angle,int ch)",
 };
 ///////////////////////////////////END///////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
