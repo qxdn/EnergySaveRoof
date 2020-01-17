@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MQTTClients</string>
+    <string name="Setting">软件设置</string>
+    <string name="HowToUse">使用说明</string>
+    <string name="About">关于软件</string>
 </resources>
