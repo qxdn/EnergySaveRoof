@@ -86,5 +86,9 @@ public class MainActivity extends BasicActivity {
         setListener();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
+    }
 }

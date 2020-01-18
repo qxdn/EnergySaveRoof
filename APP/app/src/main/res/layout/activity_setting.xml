@@ -25,7 +25,7 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:maxLines="1"
+        android:singleLine="true"
         android:text="@string/defaultHost"
         android:id="@+id/host"
         ></EditText>
@@ -44,7 +44,8 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
+            android:inputType="number"
             android:text="@string/defaultPort"
             android:id="@+id/port"
             ></EditText>
@@ -63,7 +64,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
             android:text="@string/defaultPubTopic"
             android:id="@+id/PubTopic"
             ></EditText>
@@ -82,7 +83,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
             android:text="@string/defaultSubTopic"
             android:id="@+id/SubTopic"
             ></EditText>
@@ -101,7 +102,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
             android:text="@string/defaultClientId"
             android:id="@+id/ClientId"
             ></EditText>
@@ -120,7 +121,7 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
             android:text="@string/defaultUserName"
             android:id="@+id/username"
             ></EditText>
@@ -139,9 +140,15 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:maxLines="1"
+            android:singleLine="true"
             android:text="@string/defaultPassword"
             android:id="@+id/password"
             ></EditText>
     </LinearLayout>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="保存"
+        android:id="@+id/saveButton"
+        ></Button>
 </LinearLayout>
