@@ -7,6 +7,9 @@
 #define MQTTPORT 1883
 
 const char *mqtt_server = "192.168.124.8";
+const char *pubTopic="outTopic";
+const char *subTopic="inTopic";
+
 
 WiFiClient espclient;
 PubSubClient client(espclient);
@@ -79,21 +82,26 @@ void callback(char *topic, byte *payload, unsigned int length)
   DEBUG.println();
 }
 
-void reconnect() {
+void reconnect()
+{
   // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!client.connected())
+  {
     DEBUG.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP8266Client-";//该板子的链接名称
-    clientId += String(random(0xffff), HEX);//产生一个随机数字 以免多块板子重名
+    String clientId = "ESP8266Client-";      //该板子的链接名称
+    clientId += String(random(0xffff), HEX); //产生一个随机数字 以免多块板子重名
     //尝试连接
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str()))
+    {
       DEBUG.println("connected");
       // 连接后，发布公告......
-      client.publish("outTopic", "hello world");//链接成功后 会发布这个主题和语句
+      //client.publish(pubTopic, "hello world"); //链接成功后 会发布这个主题和语句
       // ......并订阅
-      client.subscribe("inTopic");//这个是你让板子订阅的主题（接受该主题的消息）
-    } else {
+      client.subscribe(subTopic); //这个是你让板子订阅的主题（接受该主题的消息）
+    }
+    else
+    {
       DEBUG.print("failed, rc=");
       DEBUG.print(client.state());
       DEBUG.println(" try again in 5 seconds");
@@ -121,13 +129,20 @@ void setup()
 
 void loop()
 {
-  // digitalWrite(LED_BUILTIN, HIGH);
+  //digitalWrite(LED_BUILTIN, HIGH);
   // delay(200);
-  // digitalWrite(LED_BUILTIN, LOW);
-  // delay(200);
-  if(!client.connected()){
-      reconnect();
+  if (!client.connected())
+  {
+    reconnect();
   }
   client.loop();
-  
+
+  if (DEBUG.available())
+  {
+    String msg = DEBUG.readString();
+    msg.replace("\r\n","");
+    client.publish(pubTopic, msg.c_str());
+  }
+  //digitalWrite(LED_BUILTIN, LOW);
+  //delay(200);
 }

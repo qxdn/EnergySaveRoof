@@ -1,6 +1,14 @@
 <resources>
     <string name="app_name">MQTTClients</string>
-    <string name="Setting">软件设置</string>
+    <string name="Setting">设置</string>
     <string name="HowToUse">使用说明</string>
     <string name="About">关于软件</string>
+    <string name="defaultHost">192.168.124.8</string>
+    <string name="defaultPort">1883</string>
+    <string name="defaultPubTopic">hello</string>
+    <string name="defaultSubTopic">Data</string>
+    <string name="defaultClientId">AndroidId</string>
+    <string name="defaultUserName">android</string>
+    <string name="defaultPassword">123456</string>
+
 </resources>
