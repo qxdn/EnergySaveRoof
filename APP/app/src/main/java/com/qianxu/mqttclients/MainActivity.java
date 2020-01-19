@@ -1,39 +1,43 @@
 package com.qianxu.mqttclients;
 
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import android.os.IBinder;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.navigation.NavigationView;
 
-import org.eclipse.paho.android.service.MqttService;
 
 public class MainActivity extends BasicActivity {
 
-    private TextView light,water,pm;
+    private TextView light,water,pm,textIntent;
     private EditText angle;
-    private Button sendButton,connectButton;
+    private Button sendButton;
     private DrawerLayout drawerLayout;
     private NavigationView navigationView;
-    private ImageView home;
-
+    private ImageView home,imageIntent;
+    private SwitchCompat switchConnect;
 
     private MqttSetting mqttSetting;
 
@@ -55,36 +59,40 @@ public class MainActivity extends BasicActivity {
     };
 
 
+   private LocalBroadcastManager localBroadcastManager;
+   private LocalReceiver localReceiver;
+
     private void findView(){
         drawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
         navigationView=(NavigationView)findViewById(R.id.nav);
+
         home=(ImageView)findViewById(R.id.home);
+
         light=(TextView)findViewById(R.id.light);
         water = (TextView) findViewById(R.id.water);
         pm=(TextView)findViewById(R.id.PM);
         angle=(EditText)findViewById(R.id.angle);
         sendButton=(Button)findViewById(R.id.sendButton);
-        connectButton=(Button)findViewById(R.id.connect);
+
+        textIntent=(TextView)findViewById(R.id.textIntent);
+        imageIntent=(ImageView)findViewById(R.id.imageIntent);
+        switchConnect=(SwitchCompat) findViewById(R.id.switchConnect);
     }
 
     private void setListener(){
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(!mqttService.isConnected()){
-                    mqttService.Connect();
-                }
-            }
-        });
+        //发送按键
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO:
                 if(mqttService.isConnected()){
-                    mqttService.Publish("helloworld");
+                    //TODO:
+                    mqttService.Publish(String.format("UsmartChangeMotorAngle(\"%s\")\r\n",angle.getText()));
+                }else {
+                    Toast.makeText(getApplicationContext(),"尚未连接",Toast.LENGTH_LONG).show();
                 }
             }
         });
+        //主菜单
         home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -113,6 +121,20 @@ public class MainActivity extends BasicActivity {
                 return false;
             }
         });
+        switchConnect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    mqttService.Connect();
+                    imageIntent.setImageResource(R.drawable.connect);
+                    textIntent.setText(R.string.isConnected);
+                }else {
+                    mqttService.disconnect();
+                    imageIntent.setImageResource(R.drawable.notconnect);
+                    textIntent.setText(R.string.isNotConnected);
+                }
+            }
+        });
     }
 
     @Override
@@ -128,19 +150,30 @@ public class MainActivity extends BasicActivity {
 
         setListener();
 
-
+        localBroadcastManager=LocalBroadcastManager.getInstance(this);
+        IntentFilter intentFilter=new IntentFilter();
+        intentFilter.addAction("com.qianxu.mqttService.messageArrived");
+        intentFilter.addAction("com.qianxu.mqttService.connectLost");
+        localReceiver=new LocalReceiver();
+        localBroadcastManager.registerReceiver(localReceiver,intentFilter);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         ReadData();
+        if(mqttService!=null) {
+            mqttService.updateSetting(mqttSetting);
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(connection);
+        if(mqttService.isConnected()){
+            mqttService.Close();
+        }
     }
 
     private void ReadData(){
@@ -161,4 +194,25 @@ public class MainActivity extends BasicActivity {
         mqttSetting.setUserName(username);
         mqttSetting.setPassword(password);
     }
+
+
+    class LocalReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //有消息来了
+            if(intent.getAction().equalsIgnoreCase("com.qianxu.mqttService.messageArrived")){
+                String topic=intent.getStringExtra("Topic");
+                String message=intent.getStringExtra("message");
+                //TODO:更新edittor
+                Toast.makeText(getApplicationContext(),"Topic:"+topic+" message:"+message,Toast.LENGTH_LONG).show();
+            }
+            if(intent.getAction().equalsIgnoreCase("com.qianxu.mqttService.connectLost")){
+               imageIntent.setImageResource(R.drawable.notconnect);
+               textIntent.setText(R.string.isNotConnected);
+               switchConnect.setChecked(false);
+            }
+        }
+    }
+
 }

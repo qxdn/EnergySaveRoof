@@ -25,7 +25,29 @@
                     android:layout_height="wrap_content"
                     android:src="@drawable/abc_vector_test"
                     android:id="@+id/home"
+                    android:layout_gravity="center"
                     ></ImageView>
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/notconnect"
+                    android:id="@+id/imageIntent"
+                   ></ImageView>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="@string/isNotConnected"
+                    android:id="@+id/textIntent"></TextView>
+                <androidx.appcompat.widget.SwitchCompat
+                    app:trackTint="@color/colorAccent"
+                    android:id="@+id/switchConnect"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textOn="@string/connect"
+                    android:textOff="@string/disconnect"
+                    android:layout_gravity="center"></androidx.appcompat.widget.SwitchCompat>
             </LinearLayout>
         </androidx.appcompat.widget.Toolbar>
     <LinearLayout
@@ -107,11 +129,6 @@
             android:id="@+id/sendButton"
             ></Button>
     </LinearLayout>
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="连接"
-            android:id="@+id/connect"></Button>
 </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView

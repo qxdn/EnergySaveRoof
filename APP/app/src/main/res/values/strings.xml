@@ -10,5 +10,8 @@
     <string name="defaultClientId">AndroidId</string>
     <string name="defaultUserName">android</string>
     <string name="defaultPassword">123456</string>
-
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="isConnected">已连接</string>
+    <string name="isNotConnected">未连接</string>
 </resources>

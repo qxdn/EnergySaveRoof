@@ -1,22 +1,19 @@
 package com.qianxu.mqttclients;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import org.eclipse.paho.android.service.MqttAndroidClient;
-import org.eclipse.paho.client.mqttv3.DisconnectedBufferOptions;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -28,9 +25,17 @@ public class MQTTService extends Service implements MQTTServiceInterface {
     private MqttAndroidClient client;
     private String subTopic;
     private String pubTopic;
-
+    //本地广播
+    private LocalBroadcastManager localBroadcastManager;
 
     public MQTTService() {
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        //注册本地广播
+        localBroadcastManager=LocalBroadcastManager.getInstance(this);
     }
 
     //绑定
@@ -46,6 +51,7 @@ public class MQTTService extends Service implements MQTTServiceInterface {
     }
 
 
+    //MQTT初始化
     @Override
     public void Init(MqttSetting mqttSetting) {
         //订阅的主题
@@ -56,19 +62,25 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         //设置回调函数
         //TODO:
         client.setCallback(new MqttCallback() {
+            //连接断开
             @Override
             public void connectionLost(Throwable cause) {
-
+                Intent intent=new Intent("com.qianxu.mqttService.connectLost");
+                localBroadcastManager.sendBroadcast(intent);
             }
 
+            //消息到来
             @Override
             public void messageArrived(String topic, MqttMessage message) throws Exception {
-                Toast.makeText(getApplicationContext(),topic+new String(message.getPayload()),Toast.LENGTH_LONG).show();
+                Intent intent=new Intent("com.qianxu.mqttService.messageArrived");
+                intent.putExtra("Topic",topic);
+                intent.putExtra("message",new String(message.getPayload()));
+                localBroadcastManager.sendBroadcast(intent);
             }
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
-
+                Toast.makeText(getApplicationContext(),"发送成功",Toast.LENGTH_LONG);
             }
         });
         //设置连接参数
@@ -126,6 +138,10 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         }
     };
 
+    /**
+     * 发布主题
+     * @param msg
+     */
     @Override
     public void Publish(String msg) {
         //设置优先级
@@ -141,10 +157,30 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         }
     }
 
+    /**
+     * 关闭
+     */
     @Override
     public void Close() {
         if(client!=null){
            client.close();
+        }
+    }
+
+    /**
+     * 更新设置
+     * @param mqttSetting
+     */
+    @Override
+    public void updateSetting(MqttSetting mqttSetting) {
+        boolean connected=false;
+        if(isConnected()){
+            disconnect();
+            connected=true;
+        }
+        Init(mqttSetting);
+        if(connected) {
+            Connect();
         }
     }
 
@@ -166,19 +202,19 @@ public class MQTTService extends Service implements MQTTServiceInterface {
             client.close();
         }
     }
+
     /**
-     * 判断网络是否连接
+     * 断开连接
      */
-    private boolean isConnectIsNomarl() {
-        ConnectivityManager connectivityManager = (ConnectivityManager)getApplication().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo info = connectivityManager.getActiveNetworkInfo();
-        if (info != null && info.isAvailable()) {
-            String name = info.getTypeName();
-            Log.i("MQTT", "MQTT current network name：" + name);
-            return true;
-        } else {
-            Log.i("MQTT", "MQTT no network");
-            return false;
+    @Override
+    public void disconnect(){
+        if(client!=null){
+            try {
+                client.disconnect();
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
         }
     }
+
 }
