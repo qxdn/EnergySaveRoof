@@ -107,6 +107,11 @@
             android:id="@+id/sendButton"
             ></Button>
     </LinearLayout>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="连接"
+            android:id="@+id/connect"></Button>
 </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView

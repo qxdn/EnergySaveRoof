@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -75,6 +76,8 @@ public class SettingActivity extends BasicActivity implements TextWatcher {
         addListener();
 
         ReadData();
+
+       isChanged=false;
     }
 
     @Override
@@ -102,6 +105,7 @@ public class SettingActivity extends BasicActivity implements TextWatcher {
             dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    isChanged=false;
                     finish();
                 }
             });

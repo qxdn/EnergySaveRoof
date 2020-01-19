@@ -1,6 +1,10 @@
 package com.qianxu.mqttclients;
 
-public interface MQTTServiceInterface {
-    public void sendMessage(String Topic,String msg);
 
+public interface MQTTServiceInterface {
+    public void Init(MqttSetting mqttSetting);
+    public boolean isConnected();
+    public void Connect();
+    public void Publish(String msg);
+    public void Close();
 }
