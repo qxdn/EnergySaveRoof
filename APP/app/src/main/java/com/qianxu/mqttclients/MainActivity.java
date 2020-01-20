@@ -89,6 +89,9 @@ public class MainActivity extends BasicActivity {
                     mqttService.Publish(String.format("UsmartChangeMotorAngle(\"%s\")\r\n",angle.getText()));
                 }else {
                     Toast.makeText(getApplicationContext(),"尚未连接",Toast.LENGTH_LONG).show();
+                    imageIntent.setImageResource(R.drawable.notconnect);
+                    textIntent.setText(R.string.isNotConnected);
+                    switchConnect.setChecked(false);
                 }
             }
         });
@@ -103,10 +106,13 @@ public class MainActivity extends BasicActivity {
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                if(mqttService.isConnected()){
+                    Toast.makeText(getApplicationContext(),"请先断开连接",Toast.LENGTH_LONG).show();
+                }else {
                 switch (item.getItemId()){
                     case R.id.setting:
-                        Intent intent=new Intent(MainActivity.this,SettingActivity.class);
-                        startActivity(intent);
+                            Intent intent = new Intent(MainActivity.this, SettingActivity.class);
+                            startActivity(intent);
                         break;
                     case R.id.HowToUse:
                         Intent intent1=new Intent(MainActivity.this,HowToUseActivity.class);
@@ -117,6 +123,7 @@ public class MainActivity extends BasicActivity {
                         startActivity(intent2);
                         break;
                         default:break;
+                }
                 }
                 return false;
             }
@@ -154,6 +161,7 @@ public class MainActivity extends BasicActivity {
         IntentFilter intentFilter=new IntentFilter();
         intentFilter.addAction("com.qianxu.mqttService.messageArrived");
         intentFilter.addAction("com.qianxu.mqttService.connectLost");
+        intentFilter.addAction("com.qianxu.mqttService.connect");
         localReceiver=new LocalReceiver();
         localBroadcastManager.registerReceiver(localReceiver,intentFilter);
     }
@@ -211,6 +219,11 @@ public class MainActivity extends BasicActivity {
                imageIntent.setImageResource(R.drawable.notconnect);
                textIntent.setText(R.string.isNotConnected);
                switchConnect.setChecked(false);
+            }
+            if(intent.getAction().equalsIgnoreCase("com.qianxu.mqttService.connect")){
+                imageIntent.setImageResource(R.drawable.connect);
+                textIntent.setText(R.string.isConnected);
+                switchConnect.setChecked(true);
             }
         }
     }

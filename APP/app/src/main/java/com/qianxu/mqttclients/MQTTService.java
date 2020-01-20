@@ -36,6 +36,23 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         super.onCreate();
         //注册本地广播
         localBroadcastManager=LocalBroadcastManager.getInstance(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if(isConnected()){
+                    Intent intent=new Intent("com.qianxu.mqttService.connect");
+                    localBroadcastManager.sendBroadcast(intent);
+                }else {
+                    Intent intent=new Intent("com.qianxu.mqttService.connectLost");
+                    localBroadcastManager.sendBroadcast(intent);
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
     }
 
     //绑定
@@ -80,7 +97,7 @@ public class MQTTService extends Service implements MQTTServiceInterface {
 
             @Override
             public void deliveryComplete(IMqttDeliveryToken token) {
-                Toast.makeText(getApplicationContext(),"发送成功",Toast.LENGTH_LONG);
+                Toast.makeText(getApplicationContext(),"发送成功",Toast.LENGTH_LONG).show();
             }
         });
         //设置连接参数
@@ -129,11 +146,14 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         @Override
         public void onSuccess(IMqttToken arg0) {
             Log.i("MQTT", "mqtt connect success ");
+            //订阅
             subscribe();
         }
 
         @Override
         public void onFailure(IMqttToken arg0, Throwable arg1) {
+            Intent intent=new Intent("com.qianxu.mqttService.connectLost");
+            localBroadcastManager.sendBroadcast(intent);
             Log.i("MQTT", "mqtt connect failed ");
         }
     };
@@ -173,15 +193,10 @@ public class MQTTService extends Service implements MQTTServiceInterface {
      */
     @Override
     public void updateSetting(MqttSetting mqttSetting) {
-        boolean connected=false;
         if(isConnected()){
-            disconnect();
-            connected=true;
+           Close();
         }
         Init(mqttSetting);
-        if(connected) {
-            Connect();
-        }
     }
 
     /**

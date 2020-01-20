@@ -2,7 +2,7 @@
 
 ## TODO
 
-- MQTT通信
+- ~~MQTT通信~~
 
 ## APP
 
