@@ -2,6 +2,7 @@ package com.qianxu.weather;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.qianxu.dto.SolarMsg;
 import com.qianxu.dto.WeatherMsg;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -176,6 +179,57 @@ public class WeatherImpl implements Weather {
     @Override
     public WeatherMsg getWeather() {
         return getWeather(this.location);
+    }
+
+
+    private StringBuffer solarParam(Double lat, Double lon, Integer alt){
+        logger.debug("设置url参数");
+        Date now=new Date();
+        SimpleDateFormat date=new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat time=new SimpleDateFormat("HHmm");
+        // 参数
+        StringBuffer params = new StringBuffer();
+        try {
+            // 字符数据最好encoding以下;这样一来，某些特殊字符才能传过去(如:某人的名字就是“&”,不encoding的话,传不过去)
+            params.append("lat=" + URLEncoder.encode(lat.toString(), "utf-8"));
+            params.append("&");
+            params.append("lon="+URLEncoder.encode(lon.toString(),"utf-8"));
+            params.append("&");
+            params.append("date="+URLEncoder.encode(date.format(now),"utf-8"));
+            params.append("&");
+            params.append("time="+URLEncoder.encode(time.format(now),"utf-8"));
+            params.append("&");
+            params.append("alt="+URLEncoder.encode(alt.toString(),"utf-8"));
+            params.append("&");
+            params.append("tz=8");
+            params.append("&");
+            params.append("key=" + URLEncoder.encode(key, "utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            logger.error(e.toString());
+        }
+        return  params;
+    }
+
+    private SolarMsg getSolarFromJson(String json){
+        if(json!=null){
+            SolarMsg solarMsg=new SolarMsg();
+            JSONObject jsonObject=JSON.parseObject(json);
+            JSONObject solar_elevation_angle=((JSONObject)jsonObject.getJSONArray("HeWeather6").get(0)).getJSONObject("solar_elevation_angle");
+            solarMsg.setHour_angle(solar_elevation_angle.getDouble("hour_angle"));
+            solarMsg.setSolar_azimuth_angle(solar_elevation_angle.getDouble("solar_azimuth_angle"));
+            solarMsg.setSolar_elevation_angle(solar_elevation_angle.getDouble("solar_elevation_angle"));
+            solarMsg.setSolar_hour(solar_elevation_angle.getInteger("solar_hour"));
+            return solarMsg;
+        }
+        return null;
+    }
+
+    @Override
+    public SolarMsg getSolar(Double lat, Double lon, Integer alt) {
+        StringBuffer params=solarParam(lat,lon,alt);
+        HttpPost httpPost=new HttpPost("https://api.heweather.net/s6/solar/solar-elevation-angle?"+params);
+        String Json=getJson(httpPost);
+        return getSolarFromJson(Json);
     }
 
     @Override
