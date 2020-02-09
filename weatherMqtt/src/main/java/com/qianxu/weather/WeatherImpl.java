@@ -212,13 +212,14 @@ public class WeatherImpl implements Weather {
 
     private SolarMsg getSolarFromJson(String json){
         if(json!=null){
-            SolarMsg solarMsg=new SolarMsg();
+            //SolarMsg solarMsg=new SolarMsg();
             JSONObject jsonObject=JSON.parseObject(json);
             JSONObject solar_elevation_angle=((JSONObject)jsonObject.getJSONArray("HeWeather6").get(0)).getJSONObject("solar_elevation_angle");
-            solarMsg.setHour_angle(solar_elevation_angle.getDouble("hour_angle"));
-            solarMsg.setSolar_azimuth_angle(solar_elevation_angle.getDouble("solar_azimuth_angle"));
-            solarMsg.setSolar_elevation_angle(solar_elevation_angle.getDouble("solar_elevation_angle"));
-            solarMsg.setSolar_hour(solar_elevation_angle.getInteger("solar_hour"));
+            // solarMsg.setHour_angle(solar_elevation_angle.getDouble("hour_angle"));
+            // solarMsg.setSolar_azimuth_angle(solar_elevation_angle.getDouble("solar_azimuth_angle"));
+            // solarMsg.setSolar_elevation_angle(solar_elevation_angle.getDouble("solar_elevation_angle"));
+            // solarMsg.setSolar_hour(solar_elevation_angle.getInteger("solar_hour"));
+            SolarMsg solarMsg=(SolarMsg)JSON.parseObject(solar_elevation_angle.toJSONString(), SolarMsg.class);
             return solarMsg;
         }
         return null;
