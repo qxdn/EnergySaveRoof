@@ -1,0 +1,18 @@
+#ideaj
+.idea
+.settings
+weatherMqtt.iml
+
+# vscode
+.vscode
+.classpath
+.project
+
+#output
+target
+
+#resources
+src/main/resources/weather.properties
+
+#logger
+logger
