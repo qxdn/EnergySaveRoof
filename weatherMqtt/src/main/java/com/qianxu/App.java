@@ -29,6 +29,7 @@ public class App {
 
        Weather weather = new WeatherImpl();
         weather.init();
+        System.out.println(weather.getWeather("武汉"));
         System.out.println(weather.getSolar(30.59,114.30,24));
 //
 //        MyMqttClient client=new MyMqttClientImpl();

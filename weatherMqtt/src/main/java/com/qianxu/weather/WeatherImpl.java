@@ -32,8 +32,11 @@ public class WeatherImpl implements Weather {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     String location = null;
-    String key = null;
+    //免费key
+    String freeKey = null;
     String url = null;
+    //付费key
+    String apiKey=null;
 
     /**
      * 初始化相关参数
@@ -50,7 +53,8 @@ public class WeatherImpl implements Weather {
         }
         this.location=pro.getProperty("location");
         this.url=pro.getProperty("url");
-        this.key=pro.getProperty("key");
+        this.freeKey=pro.getProperty("freekey");
+        this.apiKey=pro.getProperty("apikey");
     }
     
     @Override
@@ -101,7 +105,7 @@ public class WeatherImpl implements Weather {
             // 字符数据最好encoding以下;这样一来，某些特殊字符才能传过去(如:某人的名字就是“&”,不encoding的话,传不过去)
             params.append("location=" + URLEncoder.encode(location, "utf-8"));
             params.append("&");
-            params.append("key=" + URLEncoder.encode(key, "utf-8"));
+            params.append("key=" + URLEncoder.encode(freeKey, "utf-8"));
         } catch (UnsupportedEncodingException e) {
             logger.error(e.toString());
         }
@@ -203,7 +207,7 @@ public class WeatherImpl implements Weather {
             params.append("&");
             params.append("tz=8");
             params.append("&");
-            params.append("key=" + URLEncoder.encode(key, "utf-8"));
+            params.append("key=" + URLEncoder.encode(apiKey, "utf-8"));
         } catch (UnsupportedEncodingException e) {
             logger.error(e.toString());
         }
