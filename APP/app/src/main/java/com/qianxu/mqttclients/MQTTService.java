@@ -115,7 +115,24 @@ public class MQTTService extends Service implements MQTTServiceInterface {
         mqttConnectOptions.setConnectionTimeout(10);
         // 设置会话心跳时间 单位为秒 服务器会每隔1.5*20秒的时间向客户端发送个消息判断客户端是否在线，但这个方法并没有重连的机制
         mqttConnectOptions.setKeepAliveInterval(20);
-        //TODO:设置遗嘱
+        //设置回调函数
+        client.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
+        //TODO:连接
     }
 
     @Override

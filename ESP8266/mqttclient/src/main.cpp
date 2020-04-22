@@ -3,16 +3,23 @@
 #include <PubSubClient.h>
 
 #define DEBUG Serial
+#define HARDSERIAL Serial
 //默认端口1883
 #define MQTTPORT 1883
 
-const char *mqtt_server = "192.168.124.8";
-const char *pubTopic="outTopic";
-const char *subTopic="inTopic";
-
+const char *mqtt_server = "101.133.235.188";
+const char *pubTopic = "outTopic";
+const char *angleTopic = "angle";
 
 WiFiClient espclient;
 PubSubClient client(espclient);
+
+void angleControl(String message)
+{
+  //TODO: 以下替换成USMART控制角度
+  HARDSERIAL.println(message);
+}
+
 /*
  *自动连接
  */
@@ -66,20 +73,41 @@ void smartConfig()
   }
 }
 
+String char2String(char *chars)
+{
+  return String("") + chars;
+}
+
 /*
  * mqtt回调函数
  * 信息接收
  */
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  DEBUG.print("Message arrived [");
-  DEBUG.print(topic);
-  DEBUG.print("] ");
-  for (int i = 0; i < length; i++)
+  // DEBUG.print("Message arrived [");
+  // DEBUG.print(topic);
+  // DEBUG.print("] ");
+  // for (int i = 0; i < length; i++)
+  // {
+  //   DEBUG.print((char)payload[i]);
+  // } //串口打印出收到的信息
+  // DEBUG.println();
+  int code = 0;
+  payload[length] = '\0';
+  String message = char2String((char *)payload);
+  //TODO:之后添加其他查询支持
+  if (0==strcmp(topic,angleTopic))
+    code = 1;
+  switch (code)
   {
-    DEBUG.print((char)payload[i]);
-  } //串口打印出收到的信息
-  DEBUG.println();
+  case 1:
+    angleControl(message);
+    break;
+
+  case 0:
+  default:
+    break;
+  }
 }
 
 void reconnect()
@@ -98,7 +126,7 @@ void reconnect()
       // 连接后，发布公告......
       //client.publish(pubTopic, "hello world"); //链接成功后 会发布这个主题和语句
       // ......并订阅
-      client.subscribe(subTopic); //这个是你让板子订阅的主题（接受该主题的消息）
+      client.subscribe(angleTopic); //这个是你让板子订阅的主题（接受该主题的消息）
     }
     else
     {
@@ -140,7 +168,7 @@ void loop()
   if (DEBUG.available())
   {
     String msg = DEBUG.readString();
-    msg.replace("\r\n","");
+    msg.replace("\r\n", "");
     client.publish(pubTopic, msg.c_str());
   }
   //digitalWrite(LED_BUILTIN, LOW);
