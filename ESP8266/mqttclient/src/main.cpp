@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+#include <Ticker.h>
 
 #define DEBUG Serial
 #define HARDSERIAL Serial
@@ -8,18 +9,45 @@
 #define MQTTPORT 1883
 
 const char *mqtt_server = "101.133.235.188";
-const char *pubTopic = "outTopic";
+const char *getSunTopic = "getSunMsg";
 const char *angleTopic = "angle";
+const char *sunMsgTopic = "sunMsg";
 
 WiFiClient espclient;
 PubSubClient client(espclient);
 
-void angleControl(String message)
-{
-  //TODO: 以下替换成USMART控制角度
-  HARDSERIAL.println(message);
+Ticker timer;
+
+void requireSun(){
+  //TODO:填充数据
+  //格式     "lat,lon,alt"  纬度，经度，海拔 其中alt必须为int类型，三个参数以英文,分隔
+  //参考如下
+  client.publish(getSunTopic,"30.2,120.0,10");
 }
 
+void angleControl(String angle)
+{
+  //TODO: 以下替换成USMART控制角度
+  HARDSERIAL.println(angle);
+}
+
+void autoControl(float solar_elevation_angle, float solar_azimuth_angle)
+{
+  //TODO:替换USMART 服务器不提供坡度
+  HARDSERIAL.printf("%.2f,%.2f\r\n", solar_elevation_angle, solar_azimuth_angle);
+}
+
+void handleSunMsg(String Msg)
+{
+  float solar_elevation_angle;
+  float solar_azimuth_angle;
+  int index = Msg.indexOf(',');
+  String a = Msg.substring(0, index);
+  String b = Msg.substring(index + 1);
+  solar_elevation_angle = a.toFloat();
+  solar_azimuth_angle = b.toFloat();
+  autoControl(solar_elevation_angle, solar_azimuth_angle);
+}
 /*
  *自动连接
  */
@@ -96,14 +124,18 @@ void callback(char *topic, byte *payload, unsigned int length)
   payload[length] = '\0';
   String message = char2String((char *)payload);
   //TODO:之后添加其他查询支持
-  if (0==strcmp(topic,angleTopic))
+  if (0 == strcmp(topic, angleTopic))
     code = 1;
+  if (0 == strcmp(topic, sunMsgTopic))
+    code = 2;
   switch (code)
   {
   case 1:
     angleControl(message);
     break;
-
+  case 2:
+    handleSunMsg(message);
+    break;
   case 0:
   default:
     break;
@@ -126,7 +158,9 @@ void reconnect()
       // 连接后，发布公告......
       //client.publish(pubTopic, "hello world"); //链接成功后 会发布这个主题和语句
       // ......并订阅
+      //FIXME:记得更改
       client.subscribe(angleTopic); //这个是你让板子订阅的主题（接受该主题的消息）
+      client.subscribe(sunMsgTopic);
     }
     else
     {
@@ -153,6 +187,7 @@ void setup()
   client.setServer(mqtt_server, 1883);
   //接收回调
   client.setCallback(callback);
+  timer.attach_ms(1000,requireSun);
 }
 
 void loop()
@@ -164,13 +199,12 @@ void loop()
     reconnect();
   }
   client.loop();
-
-  if (DEBUG.available())
-  {
-    String msg = DEBUG.readString();
-    msg.replace("\r\n", "");
-    client.publish(pubTopic, msg.c_str());
-  }
+  // if (DEBUG.available())
+  // {
+  //   String msg = DEBUG.readString();
+  //   msg.replace("\r\n", "");
+  //   client.publish(pubTopic, msg.c_str());
+  // }
   //digitalWrite(LED_BUILTIN, LOW);
   //delay(200);
 }
