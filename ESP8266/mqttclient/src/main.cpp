@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Ticker.h>
+#include <ArduinoJson.h>
 
 #define DEBUG Serial
 #define HARDSERIAL Serial
@@ -10,19 +11,101 @@
 
 const char *mqtt_server = "101.133.235.188";
 const char *getSunTopic = "getSunMsg";
+const char *elecTopic = "electric";
+const char *getElecTopic = "getElectric";
+const char *roofTopic = "roof";
+const char *getRoofTopic = "getRoof";
+const char *willTopic = "hardwareState";
 const char *angleTopic = "angle";
 const char *sunMsgTopic = "sunMsg";
+const char *emergencyTopic = "emergency";
+const char *windowsTopic = "windows";
+const char *smartTopic="smart";
+String clinetId = "esp8266client";
 
 WiFiClient espclient;
 PubSubClient client(espclient);
 
-Ticker timer;
+Ticker timer1;
+Ticker timer2;
 
-void requireSun(){
-  //TODO:填充数据
+void requireSun()
+{
+  //TODO:填充数据  10s一次
   //格式     "lat,lon,alt"  纬度，经度，海拔 其中alt必须为int类型，三个参数以英文,分隔
-  //参考如下
-  client.publish(getSunTopic,"30.2,120.0,10");
+  //参考如下 更改"30.2,120.0,10"
+  client.publish(getSunTopic, "30.2,120.0,10");
+}
+
+void returnState()
+{
+  //TODO:填充数据  30s一次
+  //worked  正常工作：true 异常工作:false
+  //smarted   智能控制:true   非智能控制false
+  StaticJsonDocument<200> doc;
+  doc["worked"] = true;
+  doc["smarted"] = true;
+  char JSONmessageBuffer[100];
+  serializeJson(doc, JSONmessageBuffer);
+  client.publish(willTopic, JSONmessageBuffer, true);
+}
+
+void returnElec()
+{
+  //TODO: app第三面  发电  各个参数见下 填充数据
+  StaticJsonDocument<500> doc;
+  //日均发电
+  doc["averageDayElectric"] = 13.3f;
+  //全天发电
+  doc["allDayElectric"] = 20.3f;
+  //近一周发电
+  doc["weeklyElectric"] = 20.3f;
+  //上小时发电
+  doc["lastHourElectric"] = 30.3f;
+  //一周内每天发电  7个
+  JsonArray array = doc.createNestedArray("aWeekElectrics");
+  for (int i = 0; i < 7; i++)
+  {
+    array.add((float)(random(20) + 50));
+  }
+  char JSONmessageBuffer[500];
+  serializeJson(doc, JSONmessageBuffer);
+  client.publish_P(elecTopic, JSONmessageBuffer, false);
+}
+
+void returnRoof()
+{
+  //TODO: app第二面  屋顶  各个参数见下 填充数据
+  StaticJsonDocument<500> doc;
+  //屋顶特性
+  doc["electricState"] = "正常";
+  //工作时间
+  doc["runtime"] = "6小时55分";
+  JsonArray array = doc.createNestedArray("windowsStates");
+  //5扇窗户
+  for (int i = 0; i < 5; i++)
+  {
+    JsonObject object = array.createNestedObject();
+    //开关状态 true打开  false 关闭
+    object["switchState"] = true;
+    //是否正常
+    object["workState"] = true;
+  }
+  char JSONmessageBuffer[500];
+  serializeJson(doc, JSONmessageBuffer);
+  client.publish_P(roofTopic, JSONmessageBuffer, false);
+}
+
+void emergency()
+{
+  //TODO:一键应急
+  HARDSERIAL.println("一键应急");
+}
+
+void openWindows(int index, boolean open)
+{
+  //TODO: 打开窗户  index 0-4窗户 open true:打开  false:关闭
+  HARDSERIAL.println(index+" , "+open);
 }
 
 void angleControl(String angle)
@@ -30,7 +113,6 @@ void angleControl(String angle)
   //TODO: 以下替换成USMART控制角度
   HARDSERIAL.println(angle);
 }
-
 void autoControl(float solar_elevation_angle, float solar_azimuth_angle)
 {
   //TODO:替换USMART 服务器不提供坡度
@@ -48,6 +130,26 @@ void handleSunMsg(String Msg)
   solar_azimuth_angle = b.toFloat();
   autoControl(solar_elevation_angle, solar_azimuth_angle);
 }
+
+void handleWindows(String Msg)
+{
+  //FIXME:有问题
+  int index = Msg.indexOf(',');
+  String a = Msg.substring(0, index);
+  String b = Msg.substring(index + 1);
+  int windowsIndex = a.toInt();
+  boolean open;
+  if (b == "false")
+  {
+    open = false;
+  }
+  else
+  {
+    open = true;
+  }
+  openWindows(windowsIndex, open);
+}
+
 /*
  *自动连接
  */
@@ -112,14 +214,6 @@ String char2String(char *chars)
  */
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  // DEBUG.print("Message arrived [");
-  // DEBUG.print(topic);
-  // DEBUG.print("] ");
-  // for (int i = 0; i < length; i++)
-  // {
-  //   DEBUG.print((char)payload[i]);
-  // } //串口打印出收到的信息
-  // DEBUG.println();
   int code = 0;
   payload[length] = '\0';
   String message = char2String((char *)payload);
@@ -128,6 +222,14 @@ void callback(char *topic, byte *payload, unsigned int length)
     code = 1;
   if (0 == strcmp(topic, sunMsgTopic))
     code = 2;
+  if (0 == strcmp(topic, getElecTopic))
+    code = 3;
+  if (0 == strcmp(topic, getRoofTopic))
+    code = 4;
+  if (0 == strcmp(topic, emergencyTopic))
+    code = 5;
+  if (0 == strcmp(topic, windowsTopic))
+    code = 6;
   switch (code)
   {
   case 1:
@@ -135,6 +237,18 @@ void callback(char *topic, byte *payload, unsigned int length)
     break;
   case 2:
     handleSunMsg(message);
+    break;
+  case 3:
+    returnElec();
+    break;
+  case 4:
+    returnRoof();
+    break;
+  case 5:
+    emergency();
+    break;
+  case 6:
+    handleWindows(message);
     break;
   case 0:
   default:
@@ -144,23 +258,35 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void reconnect()
 {
+  //FIXME:可能导致拍视频的问题
+  //设置lastwill
+  StaticJsonDocument<200> doc;
+  doc["worked"] = false;
+  doc["smarted"] = false;
+  char JSONmessageBuffer[100];
+  serializeJson(doc, JSONmessageBuffer);
   // Loop until we're reconnected
   while (!client.connected())
   {
     DEBUG.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";      //该板子的链接名称
-    clientId += String(random(0xffff), HEX); //产生一个随机数字 以免多块板子重名
     //尝试连接
-    if (client.connect(clientId.c_str()))
+    if (client.connect(clinetId.c_str(), willTopic, 0, true, JSONmessageBuffer))
     {
       DEBUG.println("connected");
+      doc["worked"] = true;
+      doc["smarted"] = true;
+      serializeJson(doc, JSONmessageBuffer);
+      client.publish(willTopic, JSONmessageBuffer, true);
       // 连接后，发布公告......
       //client.publish(pubTopic, "hello world"); //链接成功后 会发布这个主题和语句
       // ......并订阅
       //FIXME:记得更改
       client.subscribe(angleTopic); //这个是你让板子订阅的主题（接受该主题的消息）
       client.subscribe(sunMsgTopic);
+      client.subscribe(getElecTopic);
+      client.subscribe(getRoofTopic);
+      client.subscribe(emergencyTopic);
+      client.subscribe(windowsTopic);
     }
     else
     {
@@ -187,24 +313,15 @@ void setup()
   client.setServer(mqtt_server, 1883);
   //接收回调
   client.setCallback(callback);
-  timer.attach_ms(1000,requireSun);
+  timer1.attach(10, requireSun);
+  timer2.attach(30, returnState);
 }
 
 void loop()
 {
-  //digitalWrite(LED_BUILTIN, HIGH);
-  // delay(200);
   if (!client.connected())
   {
     reconnect();
   }
   client.loop();
-  // if (DEBUG.available())
-  // {
-  //   String msg = DEBUG.readString();
-  //   msg.replace("\r\n", "");
-  //   client.publish(pubTopic, msg.c_str());
-  // }
-  //digitalWrite(LED_BUILTIN, LOW);
-  //delay(200);
 }
