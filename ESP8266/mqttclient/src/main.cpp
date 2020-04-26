@@ -20,7 +20,7 @@ const char *angleTopic = "angle";
 const char *sunMsgTopic = "sunMsg";
 const char *emergencyTopic = "emergency";
 const char *windowsTopic = "windows";
-const char *smartTopic="smart";
+const char *smartTopic = "smart";
 String clinetId = "esp8266client";
 
 WiFiClient espclient;
@@ -31,7 +31,7 @@ Ticker timer2;
 
 void requireSun()
 {
-  //TODO:填充数据  10s一次
+  //TODO:填充数据  2分钟一次  不提供关闭
   //格式     "lat,lon,alt"  纬度，经度，海拔 其中alt必须为int类型，三个参数以英文,分隔
   //参考如下 更改"30.2,120.0,10"
   client.publish(getSunTopic, "30.2,120.0,10");
@@ -39,7 +39,7 @@ void requireSun()
 
 void returnState()
 {
-  //TODO:填充数据  30s一次
+  //TODO:填充数据  60s一次  不提供关闭
   //worked  正常工作：true 异常工作:false
   //smarted   智能控制:true   非智能控制false
   StaticJsonDocument<200> doc;
@@ -52,7 +52,7 @@ void returnState()
 
 void returnElec()
 {
-  //TODO: app第三面  发电  各个参数见下 填充数据
+  //TODO: 对应app第三面  发电参数  各个参数见下 填充数据
   StaticJsonDocument<500> doc;
   //日均发电
   doc["averageDayElectric"] = 13.3f;
@@ -75,14 +75,14 @@ void returnElec()
 
 void returnRoof()
 {
-  //TODO: app第二面  屋顶  各个参数见下 填充数据
+  //TODO: app第二面  屋顶参数  各个参数见下 填充数据
   StaticJsonDocument<500> doc;
   //屋顶特性
   doc["electricState"] = "正常";
   //工作时间
   doc["runtime"] = "6小时55分";
   JsonArray array = doc.createNestedArray("windowsStates");
-  //5扇窗户
+  //5扇窗户 各个的状态
   for (int i = 0; i < 5; i++)
   {
     JsonObject object = array.createNestedObject();
@@ -98,25 +98,33 @@ void returnRoof()
 
 void emergency()
 {
-  //TODO:一键应急
+  //TODO: app第一面 一键应急
   HARDSERIAL.println("一键应急");
 }
 
-void openWindows(int index, boolean open)
+void openWindows(int index, int open)
 {
-  //TODO: 打开窗户  index 0-4窗户 open true:打开  false:关闭
-  HARDSERIAL.println(index+" , "+open);
+  //TODO: app第三面 打开窗户  index 0-4窗户 open 1:打开  0:关闭
+  HARDSERIAL.printf("%d,%d\r\n", index, open);
 }
 
 void angleControl(String angle)
 {
-  //TODO: 以下替换成USMART控制角度
+  //TODO: app第三面 开发者功能 以下替换成USMART控制角度
   HARDSERIAL.println(angle);
 }
 void autoControl(float solar_elevation_angle, float solar_azimuth_angle)
 {
-  //TODO:替换USMART 服务器不提供坡度
+  //TODO:替换USMART 自动控制  服务器不提供坡度
   HARDSERIAL.printf("%.2f,%.2f\r\n", solar_elevation_angle, solar_azimuth_angle);
+}
+
+void smartControl(int isSmart)
+{
+  //TODO: 智能控制 对应第一面智能控制   isSmart为1则智能控制 0为手动
+  HARDSERIAL.println(isSmart);
+  //最好可以返回当前状态
+  //returnState();
 }
 
 void handleSunMsg(String Msg)
@@ -133,21 +141,34 @@ void handleSunMsg(String Msg)
 
 void handleWindows(String Msg)
 {
-  //FIXME:有问题
   int index = Msg.indexOf(',');
   String a = Msg.substring(0, index);
   String b = Msg.substring(index + 1);
   int windowsIndex = a.toInt();
-  boolean open;
+  int isopen;
   if (b == "false")
   {
-    open = false;
+    isopen = 0;
   }
   else
   {
-    open = true;
+    isopen = 1;
   }
-  openWindows(windowsIndex, open);
+  openWindows(windowsIndex, isopen);
+}
+
+void handleSmart(String msg)
+{
+  int isSmart;
+  if (msg == "false")
+  {
+    isSmart = 0;
+  }
+  else
+  {
+    isSmart = 1;
+  }
+  smartControl(isSmart);
 }
 
 /*
@@ -217,19 +238,22 @@ void callback(char *topic, byte *payload, unsigned int length)
   int code = 0;
   payload[length] = '\0';
   String message = char2String((char *)payload);
-  //TODO:之后添加其他查询支持
+  //TODO:之后添加其他查询支持  可以更换ascii switch
   if (0 == strcmp(topic, angleTopic))
     code = 1;
-  if (0 == strcmp(topic, sunMsgTopic))
+  else if (0 == strcmp(topic, sunMsgTopic))
     code = 2;
-  if (0 == strcmp(topic, getElecTopic))
+  else if (0 == strcmp(topic, getElecTopic))
     code = 3;
-  if (0 == strcmp(topic, getRoofTopic))
+  else if (0 == strcmp(topic, getRoofTopic))
     code = 4;
-  if (0 == strcmp(topic, emergencyTopic))
+  else if (0 == strcmp(topic, emergencyTopic))
     code = 5;
-  if (0 == strcmp(topic, windowsTopic))
+  else if (0 == strcmp(topic, windowsTopic))
     code = 6;
+  else if (0 == strcmp(topic, smartTopic))
+    code = 7;
+
   switch (code)
   {
   case 1:
@@ -250,6 +274,9 @@ void callback(char *topic, byte *payload, unsigned int length)
   case 6:
     handleWindows(message);
     break;
+  case 7:
+    handleSmart(message);
+    break;
   case 0:
   default:
     break;
@@ -258,7 +285,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 void reconnect()
 {
-  //FIXME:可能导致拍视频的问题
+  //FIXME:可能导致拍视频的问题,也就是不差硬件的时候拍视频会显示不正常工作，一般插了硬件就行
   //设置lastwill
   StaticJsonDocument<200> doc;
   doc["worked"] = false;
@@ -280,13 +307,13 @@ void reconnect()
       // 连接后，发布公告......
       //client.publish(pubTopic, "hello world"); //链接成功后 会发布这个主题和语句
       // ......并订阅
-      //FIXME:记得更改
       client.subscribe(angleTopic); //这个是你让板子订阅的主题（接受该主题的消息）
       client.subscribe(sunMsgTopic);
       client.subscribe(getElecTopic);
       client.subscribe(getRoofTopic);
       client.subscribe(emergencyTopic);
       client.subscribe(windowsTopic);
+      client.subscribe(smartTopic);
     }
     else
     {
@@ -313,8 +340,11 @@ void setup()
   client.setServer(mqtt_server, 1883);
   //接收回调
   client.setCallback(callback);
-  timer1.attach(10, requireSun);
-  timer2.attach(30, returnState);
+  //TODO: 时间控制 单位秒
+  //获取天气时间
+  timer1.attach(120, requireSun);
+  //返回是否正常工作
+  timer2.attach(60, returnState);
 }
 
 void loop()
