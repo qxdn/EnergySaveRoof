@@ -61,13 +61,20 @@ void returnElec()
   //近一周发电
   doc["weeklyElectric"] = 20.3f;
   //上小时发电
-  doc["lastHourElectric"] = 30.3f;
+  doc["lastHourElectric"] = 0.31f;
   //一周内每天发电  7个
   JsonArray array = doc.createNestedArray("aWeekElectrics");
-  for (int i = 0; i < 7; i++)
-  {
-    array.add((float)(random(20) + 50));
-  }
+  // for (int i = 0; i < 7; i++)
+  // {
+  //   array.add((float)(random(20) + 50));
+  // }
+  array.add(0.95f);
+  array.add(0.89f);
+  array.add(1.21f);
+  array.add(1.09f);
+  array.add(1.67f);
+  array.add(1.79f);
+  array.add(1.71f);
   char JSONmessageBuffer[500];
   serializeJson(doc, JSONmessageBuffer);
   client.publish_P(elecTopic, JSONmessageBuffer, false);
@@ -100,12 +107,16 @@ void emergency()
 {
   //TODO: app第一面 一键应急
   HARDSERIAL.println("一键应急");
+  //最好可以返回当前状态
+  //returnState();
 }
 
 void openWindows(int index, int open)
 {
   //TODO: app第三面 打开窗户  index 0-4窗户 open 1:打开  0:关闭
   HARDSERIAL.printf("%d,%d\r\n", index, open);
+  //最好可以返回当前状态
+  //returnState();
 }
 
 void angleControl(String angle)
@@ -126,6 +137,9 @@ void smartControl(int isSmart)
   //最好可以返回当前状态
   //returnState();
 }
+
+
+/******************************************************************/
 
 void handleSunMsg(String Msg)
 {
@@ -314,6 +328,8 @@ void reconnect()
       client.subscribe(emergencyTopic);
       client.subscribe(windowsTopic);
       client.subscribe(smartTopic);
+      //获取一次天气
+      requireSun();
     }
     else
     {
@@ -330,6 +346,7 @@ void setup()
 {
   //Log串口初始化
   DEBUG.begin(115200);
+  HARDSERIAL.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
   if (!autoConfig())
   {
@@ -342,7 +359,7 @@ void setup()
   client.setCallback(callback);
   //TODO: 时间控制 单位秒
   //获取天气时间
-  timer1.attach(120, requireSun);
+  timer1.attach(600, requireSun);
   //返回是否正常工作
   timer2.attach(60, returnState);
 }
